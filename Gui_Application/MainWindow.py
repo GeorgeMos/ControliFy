@@ -1,5 +1,5 @@
 #Global Lib Imports
-from PyQt6.QtCore import QSize, Qt
+from PyQt6.QtCore import QSize, Qt, pyqtSignal, QObject
 from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QWidget, QGridLayout, QStackedLayout, QVBoxLayout, \
     QHBoxLayout
 from PyQt6.QtWidgets import QTabWidget, QToolBar, QLabel, QTableView, QScrollArea, QComboBox, QFileDialog
@@ -15,6 +15,14 @@ import matplotlib.pyplot as plt
 from Widgets import Color, blankWindowWidget
 import Connection as con
 import BabisOKenosGUI
+import ArduinoGigaGUI
+from Communicator import udpCom
+from DataManager import dataManager
+from Handles import Handles
+
+
+comObject = udpCom(2390) #udp communicator instance
+
 
 
 class MainWindow(QMainWindow):
@@ -23,10 +31,13 @@ class MainWindow(QMainWindow):
         self.renameArr = [[]]
         self.currAction = ''
 
-        self.setWindowTitle("MotorTester")
+        self.setWindowTitle("ControliFy")
         self.setMinimumSize(QSize(1000, 600))
         self.setMaximumSize(QSize(1920, 1080))
         self.setUpdatesEnabled(True)
+        
+        self.handles = Handles(comObject, dataManager())
+        
 
         #Main Tool Bar
         menu = self.menuBar()
@@ -42,24 +53,14 @@ class MainWindow(QMainWindow):
         connAct.triggered.connect(self.showConWindow)
         deviceMenu.addAction(connAct)
 
-
-        # Split Window Layout
-        self.splitWindowLayout = QGridLayout()
-
-        #Add to split window
-        #splitWindowLayout.addWidget(Color("Red"), 0, 0)
-        self.splitWindowLayout.addWidget(blankWindowWidget(), 0, 0)
-        self.splitWindowLayout.addWidget(Color("Green"), 0, 1)
-        self.splitWindowLayout.addWidget(Color("Red"), 1, 1)
-        self.splitWindowLayout.addWidget(Color("Green"), 1, 0)
-
-        splitWindowWidget = QWidget()
-        splitWindowWidget.setLayout(self.splitWindowLayout)
+        disConnAct = QAction("Disconnect", self)
+        disConnAct.triggered.connect(self.disconnect)
+        deviceMenu.addAction(disConnAct)
 
 
          # Main Vertical Layout
         vl = QVBoxLayout()
-        vl.addWidget(splitWindowWidget)
+        vl.addWidget(blankWindowWidget())
 
         widget = QWidget()
         widget.setLayout(vl)
@@ -78,18 +79,28 @@ class MainWindow(QMainWindow):
 
         if fileDlg.exec():
             filenames = fileDlg.selectedFiles()
-            print(str(filenames[0]))
-            #self.leftDataObj = dataApi.data(str(filenames[0]))
-            #self.ldf = self.leftDataObj.getDf()
-            #self.updateLeftDataTable()
+            self.handles.dataHandle.addFile(filenames[0])
 
     def showConWindow(self):
-        self.w = con.conSetupWindow()
+        self.w = con.conSetupWindow(self.handles.comHandle)
         self.w.show()
-        #TODO: Make this code run on thw window destruction. It currently does not detect the device type change
-        if self.w.selectedDevice == "":
-            self.splitWindowLayout.addWidget(blankWindowWidget(), 0, 0)
-        elif self.w.selectedDevice == 'Babis O Kenos':
-            self.splitWindowLayout.addWidget(BabisOKenosGUI.guiWindow(), 0, 0)
+        #Connect the conSignal to the changeGui function
+        self.w.conSignal.clicked.connect(self.changeGui)
+        
+        
+
+    def changeGui(self):
+        if self.w.selectedDevice == "Babis O Kenos":
+            self.babis = BabisOKenosGUI.guiWindow(self.handles)
+            self.setCentralWidget(self.babis)
+            
+
+        elif self.w.selectedDevice == "Arduino Giga":
+            self.setCentralWidget(ArduinoGigaGUI.guiWindow())
+        else:
+            self.setCentralWidget(blankWindowWidget())
+
+    def disconnect(self):
+        self.handles.comHandle.send("disconnect")
             
 
