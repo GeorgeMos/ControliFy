@@ -1,6 +1,7 @@
 #Global Lib Imports
 from PyQt6.QtCore import QSize, Qt
-from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QWidget, QGridLayout, QStackedLayout, QVBoxLayout, QLineEdit, \
+import PyQt6.QtCore
+from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QWidget, QGridLayout, QStackedLayout, QHBoxLayout, QLineEdit, \
     QHBoxLayout
 from PyQt6.QtWidgets import QTabWidget, QToolBar, QLabel, QTableView, QScrollArea, QComboBox, QFileDialog
 from PyQt6.QtGui import QPalette, QColor, QAction, QIcon
@@ -35,12 +36,17 @@ class guiWindow(QWidget):
 
         # Split Window Layout
         self.splitWindowLayout = QGridLayout()
+        self.splitWindowLayout.setColumnStretch(0, 1)
+        self.splitWindowLayout.setColumnStretch(1, 1)
+
         
         self.printPanel = printManager(handles)
         self.btnGrid = controlButtonGrid(handles)
+        self.canvas = canvasWidget(handles)
         
         self.splitWindowLayout.addWidget(self.btnGrid, 0, 0)
         self.splitWindowLayout.addWidget(self.printPanel, 1, 0)
+        self.splitWindowLayout.addWidget(self.canvas, 2, 0)
 
         self.setLayout(self.splitWindowLayout)
 
@@ -153,7 +159,57 @@ class printManager(QWidget):
 
         self.setLayout(self.splitWindowLayout)
 
+class canvasWidget(QWidget):
+    def __init__(self, handles:Handles):
+        super().__init__()
+        self.setUpdatesEnabled(True)
+        self.handles:Handles = handles
+        self.box = QHBoxLayout()
 
+        #Variables
+        self.x = 1500
+        self.y = 500
+
+        self.mouseX = 0
+        self.mouseY = 0
+
+        #Configuration
+        self.setFixedHeight(self.y)
+        self.setFixedWidth(self.x)
+
+        #self.setMouseTracking(True)
+
+        #Canvas
+        self.canvasLabel = QLabel(self)
+        self.canvasLabel.setMouseTracking(True)
+        self.canvas = QtGui.QPixmap(self.x, self.y)
+        self.canvas.fill(Qt.GlobalColor.lightGray)
+
+        self.pen = QtGui.QPen()
+        self.pen.setWidth(10)
+        
+
+        self.canvasLabel.setPixmap(self.canvas)
+
+        #Setup
+        self.box.addWidget(self.canvasLabel)
+        self.setLayout(self.box)
+
+
+    def mousePressEvent(self, a0):
+        self.mouseX = int (a0.position().x())
+        self.mouseY = int (a0.position().y())
+        return super().mousePressEvent(a0)
+
+    def mouseMoveEvent(self, a0):
+        canvas = self.canvasLabel.pixmap()
+        painter = QtGui.QPainter(canvas)
+        painter.setPen(self.pen)
+        painter.drawPoint(int (a0.position().x()), int(a0.position().y()))
+        #painter.drawLine(self.mouseX, self.mouseY, int (a0.position().x()), int(a0.position().y())
+        painter.end()
+        self.canvasLabel.setPixmap(canvas)
+        return super().mouseMoveEvent(a0)
        
 
 

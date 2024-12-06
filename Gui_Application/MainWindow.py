@@ -35,6 +35,7 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("ControliFy")
         self.setMinimumSize(QSize(1000, 600))
         self.setMaximumSize(QSize(1920, 1080))
+        self.showFullScreen()
         self.setUpdatesEnabled(True)
         
         self.handles = Handles(comObject, dataManager())
