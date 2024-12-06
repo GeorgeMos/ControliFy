@@ -1,0 +1,3 @@
+Fix the input type on all function inputs and all class variables. (Add input specifier where non-existant): Done
+
+Complete the esp32Driver and refactor code to use the driver
