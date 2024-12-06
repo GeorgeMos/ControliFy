@@ -16,6 +16,7 @@ from Widgets import Color, blankWindowWidget
 import Connection as con
 import BabisOKenosGUI
 import ArduinoGigaGUI
+import LabelMakerGUI
 from Communicator import udpCom
 from DataManager import dataManager
 from Handles import Handles
@@ -93,6 +94,10 @@ class MainWindow(QMainWindow):
         if self.w.selectedDevice == "Babis O Kenos":
             self.babis = BabisOKenosGUI.guiWindow(self.handles)
             self.setCentralWidget(self.babis)
+
+        elif self.w.selectedDevice == "Label Maker":
+            self.labelMaker = LabelMakerGUI.guiWindow(self.handles)
+            self.setCentralWidget(self.labelMaker)
             
 
         elif self.w.selectedDevice == "Arduino Giga":

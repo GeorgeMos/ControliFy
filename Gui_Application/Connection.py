@@ -53,7 +53,7 @@ class conSetupWindow(QWidget):
 
         #ComboBoxes (Note for future self: selected = self.[combo name here].currentText())
         self.devSelectCombo = QComboBox(self)
-        self.devSelectCombo.addItems(['Babis O Kenos', 'Motor Tester', 'Arduino Giga'])
+        self.devSelectCombo.addItems(['Babis O Kenos', "Label Maker", 'Motor Tester', 'Arduino Giga'])
 
         #Add all the above to the grid layout
         splitWindowLayout.addWidget(devIpLable, 0, 0)
