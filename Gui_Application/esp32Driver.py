@@ -18,6 +18,16 @@ class esp32Driver():
         com.send("END")
 
     @staticmethod
+    def sendLabelData(com:udpCom, xData:list[float], yData:list[float], pData:list[float]):
+        com.send("GRAPH")
+        for i in range(len(xData)):
+            msg = "vals," + str(xData[i]) + "," + str(yData[i]) + "," + str(pData[i])
+            com.send(msg)
+            time.sleep(0.001)
+        time.sleep(0.1)
+        com.send("END")
+
+    @staticmethod
     def recieveValues(com:udpCom) -> list[str]:
         try:
             message = com.recv()

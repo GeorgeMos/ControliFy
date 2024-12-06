@@ -1,7 +1,7 @@
 #Global Lib Imports
 from PyQt6.QtCore import QSize, Qt
 import PyQt6.QtCore
-from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QWidget, QGridLayout, QStackedLayout, QHBoxLayout, QLineEdit, \
+from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QWidget, QGridLayout, QStackedLayout, QVBoxLayout, QLineEdit, \
     QHBoxLayout
 from PyQt6.QtWidgets import QTabWidget, QToolBar, QLabel, QTableView, QScrollArea, QComboBox, QFileDialog
 from PyQt6.QtGui import QPalette, QColor, QAction, QIcon
@@ -42,11 +42,11 @@ class guiWindow(QWidget):
         
         self.printPanel = printManager(handles)
         self.btnGrid = controlButtonGrid(handles)
-        self.canvas = canvasWidget(handles)
+        self.display = svgDisplayWidget(handles)
         
         self.splitWindowLayout.addWidget(self.btnGrid, 0, 0)
         self.splitWindowLayout.addWidget(self.printPanel, 1, 0)
-        self.splitWindowLayout.addWidget(self.canvas, 2, 0)
+        self.splitWindowLayout.addWidget(self.display, 2, 0)
 
         self.setLayout(self.splitWindowLayout)
 
@@ -148,6 +148,7 @@ class printManager(QWidget):
         #Buttons
         self.printBtn = QPushButton(self)
         self.printBtn.setIcon(QIcon('icons/LabelMaker/png/printing.png'))
+        self.printBtn.clicked.connect(self.printLabel)
 
         #Setup
         self.splitWindowLayout.addWidget(self.printTypeLabel, 0, 0)
@@ -159,57 +160,68 @@ class printManager(QWidget):
 
         self.setLayout(self.splitWindowLayout)
 
-class canvasWidget(QWidget):
+    def printLabel(self):
+        print("TESTING")
+        esp32Driver.sendLabelData(self.handles.comHandle, [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3])
+
+class svgDisplayWidget(QWidget):
     def __init__(self, handles:Handles):
         super().__init__()
         self.setUpdatesEnabled(True)
         self.handles:Handles = handles
-        self.box = QHBoxLayout()
+        self.box = QGridLayout()
+        self.box.rowStretch(1)
 
-        #Variables
-        self.x = 1500
-        self.y = 500
+        self.imageMaxHeight = 500
 
-        self.mouseX = 0
-        self.mouseY = 0
+        #Labels
+        self.selectImageLabel = QLabel(self)
+        self.selectImageLabel.setText("Select Image:")
 
-        #Configuration
-        self.setFixedHeight(self.y)
-        self.setFixedWidth(self.x)
+        self.displayLabel = QLabel(self)
+        self.displayLabel.setMaximumHeight(self.imageMaxHeight)
+        #self.displayLabel.setScaledContents(True)
 
-        #self.setMouseTracking(True)
+        #ComboBox
+        self.fileCombo = QComboBox(self)
+        self.fileCombo.clear()
+        self.fileCombo.activated.connect(self.displayImage)
 
-        #Canvas
-        self.canvasLabel = QLabel(self)
-        self.canvasLabel.setMouseTracking(True)
-        self.canvas = QtGui.QPixmap(self.x, self.y)
-        self.canvas.fill(Qt.GlobalColor.lightGray)
+        #Buttons
+        self.refreshBtn = QPushButton(self)
+        self.refreshBtn.setIcon(QIcon("icons/LabelMaker/png/refresh.png"))
+        self.refreshBtn.clicked.connect(self.updateCombo)
+        self.refreshBtn.setFixedWidth(25)
+        self.refreshBtn.setFixedHeight(25)
 
-        self.pen = QtGui.QPen()
-        self.pen.setWidth(10)
-        
-
-        self.canvasLabel.setPixmap(self.canvas)
+        self.printBtn = QPushButton(self)
+        self.printBtn.setIcon(QIcon('icons/LabelMaker/png/printing.png'))
+        self.printBtn.clicked.connect(self.printLabel)
+        self.printBtn.setFixedWidth(25)
+        self.printBtn.setFixedHeight(25)
 
         #Setup
-        self.box.addWidget(self.canvasLabel)
+        self.box.addWidget(self.selectImageLabel, 0, 0)
+        self.box.addWidget(self.refreshBtn, 0, 1)
+        self.box.addWidget(self.fileCombo, 0, 2, 1, 2)
+        self.box.addWidget(self.printBtn, 0, 4, 1, 1)
+        self.box.addWidget(self.displayLabel, 1, 0, 1, 10)
+
+        
         self.setLayout(self.box)
 
+    def updateCombo(self):
+        self.fileCombo.clear()
+        for i in self.handles.dataHandle.files:
+            self.fileCombo.addItem(i.fileName)
+    
+    def displayImage(self):
+        pixMap = QtGui.QPixmap(self.fileCombo.currentText())
+        self.displayLabel.setPixmap(pixMap.scaledToHeight(self.imageMaxHeight))
 
-    def mousePressEvent(self, a0):
-        self.mouseX = int (a0.position().x())
-        self.mouseY = int (a0.position().y())
-        return super().mousePressEvent(a0)
-
-    def mouseMoveEvent(self, a0):
-        canvas = self.canvasLabel.pixmap()
-        painter = QtGui.QPainter(canvas)
-        painter.setPen(self.pen)
-        painter.drawPoint(int (a0.position().x()), int(a0.position().y()))
-        #painter.drawLine(self.mouseX, self.mouseY, int (a0.position().x()), int(a0.position().y())
-        painter.end()
-        self.canvasLabel.setPixmap(canvas)
-        return super().mouseMoveEvent(a0)
+    def printLabel(self):
+        print("TESTING")
+        esp32Driver.sendLabelData(self.handles.comHandle, [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3])
        
 
 

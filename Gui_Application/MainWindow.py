@@ -77,7 +77,10 @@ class MainWindow(QMainWindow):
     def importMenuBtn(self):
         fileDlg = QFileDialog()
         #fileDlg.setAcceptMode(QFileDialog.AcceptMode.AcceptOpen)
-        fileDlg.setNameFilter("CSV Files (*.csv)")
+        if self.w.selectedDevice == "Babis O Kenos":
+            fileDlg.setNameFilter("CSV Files (*.csv)")
+        elif self.w.selectedDevice == "Label Maker":
+            fileDlg.setNameFilter("SVG Files (*.svg)")
 
         if fileDlg.exec():
             filenames = fileDlg.selectedFiles()
